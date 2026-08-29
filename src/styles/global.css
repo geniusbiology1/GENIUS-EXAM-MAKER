@@ -1,101 +1,19 @@
-:root {
-  --bg-dark: #0f1117;
-  --card-bg: #181b25;
-  --accent-red: #e63946;
-  --text-main: #f1faee;
-  --text-muted: #a8dadc;
-  --border-color: #2b2d42;
-  --font-cairo: 'Cairo', system-ui, sans-serif;
+/* تنسيقات الأقسام والأسئلة المقالية */
+.section-header-title {
+  background-color: #f0f0f0;
+  padding: 6px 12px;
+  border-right: 4px solid var(--accent-red);
+  font-size: 1rem;
+  margin-bottom: 14px;
 }
 
-[data-theme="blue"] {
-  --accent-red: #1d3557;
-  --card-bg: #14213d;
-}
-
-[data-theme="emerald"] {
-  --accent-red: #2a9d8f;
-  --card-bg: #1c2a27;
-}
-
-body {
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  font-family: var(--font-cairo);
-  margin: 0;
-  direction: rtl;
-}
-
-.card {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-}
-
-.btn {
-  border: none;
-  padding: 10px 18px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-primary { background: var(--accent-red); color: #fff; }
-.btn-secondary { background: #2b2d42; color: #fff; }
-.btn-accent { background: #457b9d; color: #fff; }
-
-/* تنسيقات غلاف الامتحان المطبوع المنسق كـ كتاب */
-.exam-paper-container {
-  background: #fff;
-  color: #000;
-  padding: 30px;
-  border-radius: 4px;
-}
-
-.exam-header-book {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 3px double #000;
-  padding-bottom: 14px;
-  margin-bottom: 20px;
-}
-
-.question-block {
-  border-bottom: 1px dashed #ccc;
-  padding: 12px 0;
-}
-
-.q-head { font-weight: bold; font-size: 1.05rem; }
-.q-num { color: var(--accent-red); margin-left: 8px; }
-
-.options-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+.essay-answer-space {
   margin-top: 10px;
   padding-right: 15px;
 }
 
-.omr-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.omr-bubbles span {
-  display: inline-block;
-  width: 22px;
-  height: 22px;
-  border: 1px solid #000;
-  border-radius: 50%;
-  text-align: center;
-  margin: 0 3px;
-}
-
-@media print {
-  .no-print { display: none !important; }
-  body { background: #fff; }
+.essay-line {
+  border-bottom: 1px dashed #999;
+  height: 28px;
+  width: 100%;
 }
