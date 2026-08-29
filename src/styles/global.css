@@ -105,6 +105,17 @@ body {
 /* ==========================================
    تنسيق ورقة A4 الحقيقية والطباعة للمطابع
    ========================================== */
+/* إصلاح حصر الصور داخل الـ A4 ومحاذاتها */
+.q-block img {
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: 220px;
+  object-fit: contain;
+  display: block;
+  margin: 10px auto;
+  border-radius: 6px;
+}
+
 .a4-paper {
   width: 210mm;
   min-height: 297mm;
@@ -113,6 +124,7 @@ body {
   background: var(--theme-bg) !important;
   color: var(--theme-dark) !important;
   box-sizing: border-box;
+  overflow: hidden; /* يمنع أي عنصر من الخروج بره الصفحة */
 }
 
 .exam-header-box {
