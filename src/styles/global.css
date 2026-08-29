@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
+
+:root {
+  --primary: #c53030;
+  --primary-hover: #9b2c2c;
+  --bg-dark: #1a202c;
+  --card-bg: #2d3748;
+  --text-light: #edf2f7;
+  --border-color: #4a5568;
+}
+
+* { box-sizing: border-box; touch-action: manipulation; }
+
+body {
+  margin: 0;
+  font-family: 'Cairo', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-light);
+  direction: rtl;
+}
+
+.app-container { max-width: 900px; margin: 0 auto; padding: 12px; }
+.main-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--primary); padding-bottom: 12px; margin-bottom: 16px; }
+.card { background: var(--card-bg); padding: 16px; border-radius: 8px; margin-bottom: 14px; }
+.form-group { margin-bottom: 12px; display: flex; flex-direction: column; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+
+input, select, textarea { padding: 10px; border-radius: 6px; border: 1px solid var(--border-color); background: #1a202c; color: #fff; font-family: inherit; }
+.btn { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; font-family: inherit; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-secondary { background: #4a5568; color: #fff; }
+.btn-sm { padding: 6px 10px; font-size: 0.85rem; }
+
+.modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 16px; }
+.modal-content { background: var(--card-bg); padding: 20px; border-radius: 10px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
