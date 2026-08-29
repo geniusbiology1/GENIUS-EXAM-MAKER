@@ -1,197 +1,128 @@
 import React, { useState } from 'react';
-import * as pdfjsLib from 'pdfjs-dist';
-import mammoth from 'mammoth';
 import { createWorker } from 'tesseract.js';
 import { dbOperations } from '../db/database';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-
 export default function FileImportModal({ onClose, onImportSuccess }) {
+  const [questionsList, setQuestionsList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [statusText, setStatusText] = useState('');
+  const [chapter, setChapter] = useState('الدعامة والحركة');
 
-  // 1. قراءة واستخراج النصوص والصور من Word (.docx)
-  const processDocx = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const imagesExtracted = [];
+  const handleImagesUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    const options = {
-      convertImage: mammoth.images.imgElement((image) => {
-        return image.read("base64").then((imageBuffer) => {
-          const src = `data:${image.contentType};base64,${imageBuffer}`;
-          imagesExtracted.push(src);
-          return { src };
+    setLoading(true);
+    setStatusText('تحضير محرك معالجة ورسم الأحياء...');
+
+    try {
+      const worker = await createWorker('ara');
+      const newItems = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        setStatusText(`قراءة الصورة وحفظ الرسم التوضيحي (${i + 1} من ${files.length})...`);
+
+        const imageSrc = await readFileAsDataURL(file);
+        const { data: { text } } = await worker.recognize(file);
+        const cleanedText = text.replace(/([أ-ي])\s+([أ-ي])/g, '$1$2').trim();
+
+        newItems.push({
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
+          text: cleanedText || 'اكتب نص السؤال هنا...',
+          image: imageSrc,
+          hasImage: true,
+          type: 'mcq',
+          marks: 1,
+          chapter: chapter
         });
-      })
-    };
+      }
 
-    const result = await mammoth.extractRawText({ arrayBuffer }, options);
-    return { text: result.value, images: imagesExtracted };
-  };
-
-  // 2. قراءة واستخراج النصوص من PDF
-  const processPdf = async (file) => {
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let fullText = '';
-
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items.map(item => item.str).join(' ');
-      fullText += pageText + '\n';
+      await worker.terminate();
+      setQuestionsList(prev => [...prev, ...newItems]);
+    } catch (err) {
+      console.error(err);
+      alert('حدث خطأ أثناء تحليل الصور. تحقق من اتصال الإنترنت للتحميل الأول.');
+    } finally {
+      setLoading(false);
+      setStatusText('');
     }
-    return { text: fullText, images: [] };
   };
 
-  // 3. قراءة وتفريغ النص من الصور المباشرة (OCR)
-  const processImageOCR = async (file) => {
-    setStatusText('جاري التعرف الضوئي على النص داخل الصورة (OCR)...');
-    const worker = await createWorker('ara+eng');
-    const ret = await worker.recognize(file);
-    await worker.terminate();
-
-    // تحويل الصورة نفسها لـ Base64 لإرفاقها بالسؤال
-    const reader = new FileReader();
-    const imageBase64 = await new Promise((resolve) => {
+  const readFileAsDataURL = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
       reader.onload = (e) => resolve(e.target.result);
       reader.readAsDataURL(file);
     });
-
-    return { text: ret.data.text, images: [imageBase64] };
   };
 
-  // دالة تحليل النصوص الذكية والفصل بين الأسئلة والخيارات
-  const parseContentToQuestions = (text, images) => {
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    const questions = [];
-    let currentQ = null;
-    let imgIndex = 0;
-
-    const questionRegex = /^([سQ]\s*\d+|[\(\[]?\d+[\)\]\.\-\/])/i;
-    const optionRegex = /^([\(\[]?[أ-دA-D1-4][\)\]\.\-\/])/i;
-
-    lines.forEach((line) => {
-      if (questionRegex.test(line) || (!currentQ && line.length > 5)) {
-        if (currentQ) questions.push(currentQ);
-        
-        currentQ = {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 4),
-          text: line.replace(questionRegex, '').trim(),
-          type: 'mcq',
-          chapter: 'مستورد',
-          difficulty: 'متوسط',
-          options: [],
-          correctAnswer: 0,
-          marks: 1,
-          image: images[imgIndex] || null, // إرفاق الصورة المتاحة مع السؤال
-          createdAt: new Date().toISOString()
-        };
-        if (images[imgIndex]) imgIndex++;
-      } else if (currentQ) {
-        if (optionRegex.test(line)) {
-          currentQ.options.push(line.replace(optionRegex, '').trim());
-        } else {
-          if (currentQ.options.length === 0) {
-            currentQ.text += ' ' + line;
-          } else {
-            const lastIdx = currentQ.options.length - 1;
-            currentQ.options[lastIdx] += ' ' + line;
-          }
-        }
-      }
-    });
-
-    if (currentQ) questions.push(currentQ);
-
-    // خطة احتياطية للفقرات غير المرقمة
-    if (questions.length === 0 && text.trim().length > 0) {
-      questions.push({
-        id: Date.now().toString(),
-        text: text.trim(),
-        type: 'essay',
-        chapter: 'مستورد',
-        difficulty: 'متوسط',
-        options: [],
-        correctAnswer: 0,
-        marks: 1,
-        image: images[0] || null,
+  const handleSaveAll = async () => {
+    for (const q of questionsList) {
+      await dbOperations.add('questions', {
+        ...q,
+        image: q.hasImage ? q.image : null,
         createdAt: new Date().toISOString()
       });
     }
-
-    return questions;
-  };
-
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setLoading(true);
-    setStatusText('جاري تحليل ومعالجة الملف...');
-
-    try {
-      let extractedData = { text: '', images: [] };
-      const ext = file.name.split('.').pop().toLowerCase();
-
-      if (ext === 'pdf') {
-        extractedData = await processPdf(file);
-      } else if (ext === 'docx') {
-        extractedData = await processDocx(file);
-      } else if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-        extractedData = await processImageOCR(file);
-      } else {
-        alert('نوع الملف غير مدعوم. اختر (PDF / Word / صورة)');
-        setLoading(false);
-        return;
-      }
-
-      setStatusText('جاري تفكيك وتصنيف الأسئلة والصور...');
-      const questions = parseContentToQuestions(extractedData.text, extractedData.images);
-
-      if (questions.length === 0) {
-        alert('تعذر استخراج أسئلة من الملف.');
-      } else {
-        for (const q of questions) {
-          await dbOperations.add('questions', q);
-        }
-        alert(`تم استخراج وإضافة ${questions.length} سؤال وبنجاح!`);
-        onImportSuccess();
-      }
-    } catch (err) {
-      console.error(err);
-      alert('حدث خطأ أثناء معالجة الملف.');
-    } finally {
-      setLoading(false);
-    }
+    onImportSuccess();
   };
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content">
-        <h3>📁 استيراد الشامل (PDF / Word / صور)</h3>
-        <p style={{ fontSize: '0.85rem', color: '#aaa' }}>
-          يستخرج هذا المحرك النصوص والصور المدمجة والأسئلة تلقائياً من الملفات والصور المصورة.
-        </p>
+      <div className="modal-content" style={{ maxWidth: '900px' }}>
+        <h3>🧬 معالجة واستخراج أسئلة الأحياء (نص + رسم)</h3>
 
-        <div className="form-group" style={{ marginTop: '14px' }}>
-          <label>اختر الملف (PDF, DOCX, PNG, JPG):</label>
-          <input 
-            type="file" 
-            accept=".pdf, .docx, .png, .jpg, .jpeg, .webp" 
-            onChange={handleFileUpload}
-            disabled={loading}
-          />
+        <div className="form-group">
+          <label>الفصل / الدرس:</label>
+          <input type="text" value={chapter} onChange={(e) => setChapter(e.target.value)} />
         </div>
 
-        {loading && (
-          <div style={{ marginTop: '12px' }}>
-            <p style={{ color: 'var(--accent)', fontWeight: 'bold' }}>⏳ {statusText}</p>
+        <div className="form-group">
+          <label>اختر صور الأسئلة (تحتوي رسم توضيحي أو نص):</label>
+          <input type="file" accept="image/*" multiple onChange={handleImagesUpload} disabled={loading} />
+        </div>
+
+        {loading && <p style={{ color: 'var(--accent-gold)', textAlign: 'center' }}>⏳ {statusText}</p>}
+
+        {questionsList.length > 0 && (
+          <div style={{ maxHeight: '420px', overflowY: 'auto', margin: '15px 0' }}>
+            {questionsList.map((q, idx) => (
+              <div key={q.id} className="card" style={{ background: '#0f121a', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <span style={{ fontWeight: 'bold', color: 'var(--primary-red)' }}>سؤال #{idx + 1}</span>
+                  <button style={{ background: 'none', border: 'none', color: '#ff4d4d', cursor: 'pointer' }} onClick={() => setQuestionsList(questionsList.filter(item => item.id !== q.id))}>🗑️ حذف</button>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: q.hasImage ? '1fr 220px' : '1fr', gap: '15px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.85rem', color: '#aaa' }}>النص والخيارات المستخرجة:</label>
+                    <textarea rows="4" value={q.text} onChange={(e) => {
+                      const updated = [...questionsList];
+                      updated[idx].text = e.target.value;
+                      setQuestionsList(updated);
+                    }} />
+                  </div>
+
+                  {q.hasImage && (
+                    <div style={{ textAlign: 'center', background: '#161b26', padding: '8px', borderRadius: '8px' }}>
+                      <img src={q.image} alt="diagram" style={{ maxWidth: '100%', maxHeight: '120px', objectFit: 'contain' }} />
+                      <button className="btn btn-secondary" style={{ fontSize: '0.75rem', marginTop: '6px' }} onClick={() => {
+                        const updated = [...questionsList];
+                        updated[idx].hasImage = !updated[idx].hasImage;
+                        setQuestionsList(updated);
+                      }}>إلغاء الرسمة</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
-        <div style={{ marginTop: '16px' }}>
-          <button className="btn btn-secondary" onClick={onClose} disabled={loading}>إغلاق</button>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '15px' }}>
+          <button className="btn btn-secondary" onClick={onClose}>إلغاء</button>
+          <button className="btn btn-primary" disabled={questionsList.length === 0 || loading} onClick={handleSaveAll}>حفظ في بنك الأسئلة</button>
         </div>
       </div>
     </div>
