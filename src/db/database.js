@@ -1,65 +1,47 @@
-const DB_NAME = 'GeniusExamMakerDB';
-const DB_VERSION = 3;
+import { openDB } from 'idb';
 
-export const initDB = () => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
+const DB_NAME = 'GeniusBiologyDB';
+const DB_VERSION = 2;
+
+export const initDB = async () => {
+  return openDB(DB_NAME, DB_VERSION, {
+    upgrade(db, oldVersion) {
       if (!db.objectStoreNames.contains('questions')) {
         db.createObjectStore('questions', { keyPath: 'id' });
       }
-      if (!db.objectStoreNames.contains('exams')) {
-        db.createObjectStore('exams', { keyPath: 'id' });
+      if (!db.objectStoreNames.contains('chapters')) {
+        db.createObjectStore('chapters', { keyPath: 'id' });
       }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+      if (!db.objectStoreNames.contains('lessons')) {
+        db.createObjectStore('lessons', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('settings')) {
+        db.createObjectStore('settings', { keyPath: 'key' });
+      }
+    },
   });
 };
 
 export const dbOperations = {
   async getAll(storeName) {
     const db = await initDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readonly');
-      const store = tx.objectStore(storeName);
-      const req = store.getAll();
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
+    return db.getAll(storeName);
   },
-
   async add(storeName, item) {
     const db = await initDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readwrite');
-      const store = tx.objectStore(storeName);
-      const req = store.put(item);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
+    return db.put(storeName, item);
   },
-
   async delete(storeName, id) {
     const db = await initDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readwrite');
-      const store = tx.objectStore(storeName);
-      const req = store.delete(id);
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
+    return db.delete(storeName, id);
   },
-
-  async clearStore(storeName) {
+  async getSetting(key, defaultValue) {
     const db = await initDB();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, 'readwrite');
-      const store = tx.objectStore(storeName);
-      const req = store.clear();
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
-    });
+    const res = await db.get('settings', key);
+    return res ? res.value : defaultValue;
+  },
+  async setSetting(key, value) {
+    const db = await initDB();
+    return db.put('settings', { key, value });
   }
 };
