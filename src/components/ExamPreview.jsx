@@ -5,7 +5,7 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
   const [includeOMR, setIncludeOMR] = useState(true);
   const [includeModelAnswer, setIncludeModelAnswer] = useState(false);
 
-  // تصدير كـ Word (.docx / HTML Format)
+  // تصدير كـ Word (.docx)
   const exportToWord = () => {
     const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Exam</title></head><body dir='rtl' style='font-family: Arial;'>";
     const footer = "</body></html>";
@@ -20,7 +20,7 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
     document.body.removeChild(fileDownload);
   };
 
-  // تصدير كـ صور (PNG Image Export)
+  // تصدير كـ صور (PNG Image)
   const exportToImages = async () => {
     const element = document.getElementById("print-area");
     const canvas = await html2canvas(element, { scale: 2, useCORS: true });
@@ -32,9 +32,12 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
     link.click();
   };
 
+  const mcqQuestions = (questions || []).filter(q => q.type === 'mcq');
+  const essayQuestions = (questions || []).filter(q => q.type === 'essay');
+
   return (
     <div>
-      {/* شريط التحكم للتصدير والطباعة */}
+      {/* شريط التحكم والتصدير */}
       <div className="card no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <button className="btn btn-secondary" onClick={onBack}>⬅️ العودة</button>
         <button className="btn btn-primary" onClick={() => window.print()}>📄 تصدير / طباعة PDF</button>
@@ -47,9 +50,10 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
         </div>
       </div>
 
-      {/* منطقة الورقة الامتحانية المنقحة والمصممة كـ كتاب احترافي */}
+      {/* الورقة الامتحانية */}
       <div id="print-area" className="exam-paper-container">
-        {/* هيدر الامتحان الاحترافي */}
+        
+        {/* الترويسة الاحترافية */}
         <div className="exam-header-book">
           <div className="brand-side">
             <h2>{branding?.centerName}</h2>
@@ -65,38 +69,65 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
           </div>
         </div>
 
-        {/* جسم الامتحان والأسئلة */}
-        <div className="questions-body">
-          {(questions || []).map((q, idx) => (
-            <div key={q.id || idx} className="question-block">
-              <div className="q-head">
-                <span className="q-num">س {idx + 1}</span>
-                <span className="q-text">{q.text}</span>
-                <span className="q-marks">({q.marks} درجات)</span>
-              </div>
+        {/* القسم الأول: أسئلة الاختيار من متعدد */}
+        {mcqQuestions.length > 0 && (
+          <div className="exam-section">
+            <h3 className="section-header-title">أولاً: أسئلة الاختيار من متعدد</h3>
+            {mcqQuestions.map((q, idx) => (
+              <div key={q.id || idx} className="question-block">
+                <div className="q-head">
+                  <span className="q-num">س {idx + 1}:</span>
+                  <span className="q-text">{q.text}</span>
+                  <span className="q-marks">({q.marks || 1} درجة)</span>
+                </div>
 
-              {q.image && <img src={q.image} alt="توضيح" className="q-img" />}
+                {q.image && <img src={q.image} alt="توضيح" className="q-img" />}
 
-              {q.type === 'mcq' && q.options && (
                 <div className="options-grid">
-                  {q.options.map((opt, oIdx) => (
+                  {(q.options || []).map((opt, oIdx) => (
                     <div key={oIdx} className="option-item">
                       <span className="opt-symbol">({String.fromCharCode(65 + oIdx)})</span>
                       <span className="opt-text">{opt}</span>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* جدول الـ OMR الاحترافي */}
-        {includeOMR && (
-          <div className="omr-section page-break">
+        {/* القسم الثاني: الأسئلة المقالية (تنسيق خاص بسطور الإجابة) */}
+        {essayQuestions.length > 0 && (
+          <div className="exam-section" style={{ marginTop: '24px' }}>
+            <h3 className="section-header-title">ثانياً: الأسئلة المقالية (أجب عن الأسئلة التالية موضحاً خطوات الحل)</h3>
+            {essayQuestions.map((q, idx) => (
+              <div key={q.id || idx} className="question-block essay-block">
+                <div className="q-head">
+                  <span className="q-num">س {mcqQuestions.length + idx + 1}:</span>
+                  <span className="q-text">{q.text}</span>
+                  <span className="q-marks">({q.marks || 2} درجات)</span>
+                </div>
+
+                {q.image && <img src={q.image} alt="توضيح" className="q-img" />}
+
+                {/* مساحة الإجابة المخصصة للأسئلة المقالية (سطور مسطرة جاهزة للكتابة) */}
+                <div className="essay-answer-space">
+                  <div className="essay-line"></div>
+                  <div className="essay-line"></div>
+                  <div className="essay-line"></div>
+                  <div className="essay-line"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* شيت الـ OMR لأسئلة اختر فقط */}
+        {includeOMR && mcqQuestions.length > 0 && (
+          <div className="omr-section page-break" style={{ marginTop: '30px' }}>
             <h3 className="section-title">شيت إجابة البابل شيت (OMR)</h3>
             <div className="omr-grid">
-              {(questions || []).filter(q => q.type === 'mcq').map((q, i) => (
+              {mcqQuestions.map((q, i) => (
                 <div key={i} className="omr-row">
                   <span className="omr-num">{i + 1}</span>
                   <div className="omr-bubbles">
@@ -107,6 +138,20 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
             </div>
           </div>
         )}
+
+        {/* نموذج الإجابة للمدرس */}
+        {includeModelAnswer && (
+          <div className="model-answer-section page-break" style={{ marginTop: '30px', borderTop: '2px solid #000', paddingTop: '15px' }}>
+            <h3>🔑 نموذج الإجابة الرسمي</h3>
+            <h4>إجابات الاختيار من متعدد:</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+              {mcqQuestions.map((q, i) => (
+                <div key={i}><strong>س{i + 1}:</strong> الخيار ({String.fromCharCode(65 + (q.correctAnswer || 0))})</div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
