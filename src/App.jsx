@@ -1,63 +1,76 @@
 import React, { useState, useEffect } from 'react';
 import { dbOperations } from './db/database';
-import FileImportModal from './components/FileImportModal';
+import QuestionFormModal from './components/QuestionFormModal';
+import SettingsModal from './components/SettingsModal';
 import ExamPreview from './components/ExamPreview';
 import './styles/global.css';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState('questions');
+  const [view, setView] = useState('questions');
   const [questions, setQuestions] = useState([]);
-  const [selectedQuestions, setSelectedQuestions] = useState([]);
-  const [showImport, setShowImport] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
-  const [branding] = useState({
-    teacherName: 'أ/ علاء شيتة',
-    subjectName: 'الأحياء للثانوية العامة',
-    centerName: 'GENIUS BIOLOGY CENTER',
-  });
+  useEffect(() => { loadQuestions(); }, []);
 
-  useEffect(() => { loadData(); }, []);
-
-  const loadData = async () => {
-    const qList = await dbOperations.getAll('questions');
-    setQuestions(qList || []);
+  const loadQuestions = async () => {
+    const list = await dbOperations.getAll('questions');
+    setQuestions(list || []);
   };
 
   return (
-    <div>
+    <div className="container">
       <header className="app-header no-print">
-        <h1>🧬 GENIUS BIOLOGY EXAM BUILDER V3</h1>
         <div>
-          <button className="btn btn-secondary" onClick={() => setShowImport(true)}>📥 إدخال ومعالجة صور</button>
-          <button className="btn btn-primary" onClick={() => setCurrentView('preview')}>🚀 إنشاء امتحان ({selectedQuestions.length})</button>
+          <h2 style={{ fontSize: '1.2rem', color: 'var(--theme-primary)' }}>🧬 GENIUS EXAM BUILDER</h2>
+          <small style={{ color: 'var(--text-secondary)' }}>أ/ علاء شيتة — بنك الأسئلة والامتحانات</small>
+        </div>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button className="btn btn-secondary" onClick={() => setShowSettingsModal(true)}>⚙️ القواميس والباليتات</button>
+          <button className="btn btn-secondary" onClick={() => setShowQuestionModal(true)}>➕ سؤال جديد</button>
+          <button className="btn btn-primary" disabled={selectedIds.length === 0} onClick={() => setView('preview')}>
+            🚀 معاينة A4 ({selectedIds.length})
+          </button>
         </div>
       </header>
 
-      {currentView === 'questions' ? (
+      {view === 'questions' ? (
         <main>
-          <div className="card"><h3>📚 بنك الأسئلة والمخططات ({questions.length})</h3></div>
+          <div className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h4>📚 بنك الأسئلة المتاحة ({questions.length})</h4>
+          </div>
+
           {questions.map((q) => {
-            const isSelected = selectedQuestions.includes(q.id);
+            const isSelected = selectedIds.includes(q.id);
             return (
-              <div key={q.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div key={q.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
                 <div>
-                  <p style={{ fontWeight: 'bold' }}>{q.text}</p>
-                  {q.image && <small style={{ color: 'var(--accent-gold)' }}>🖼️ يحتوي رسم توضيحي</small>}
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                    📌 {q.chapter} ➔ {q.lesson}
+                  </div>
+                  <p style={{ fontWeight: 700 }}>{q.text}</p>
                 </div>
-                <button className={`btn ${isSelected ? 'btn-primary' : 'btn-secondary'}`} onClick={() => {
-                  setSelectedQuestions(isSelected ? selectedQuestions.filter(id => id !== q.id) : [...selectedQuestions, q.id]);
-                }}>
-                  {isSelected ? '✓ محدد' : '+ إضافة'}
+                <button 
+                  className={`btn ${isSelected ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setSelectedIds(isSelected ? selectedIds.filter(id => id !== q.id) : [...selectedIds, q.id])}
+                >
+                  {isSelected ? '✓ محدد' : '+ تحديد'}
                 </button>
               </div>
             );
           })}
         </main>
       ) : (
-        <ExamPreview exam={{ title: 'اختبار الأحياء' }} questions={questions.filter(q => selectedQuestions.includes(q.id))} branding={branding} onBack={() => setCurrentView('questions')} />
+        <ExamPreview 
+          exam={{ title: 'اختبار الأحياء' }} 
+          questions={questions.filter(q => selectedIds.includes(q.id))} 
+          onBack={() => setView('questions')} 
+        />
       )}
 
-      {showImport && <FileImportModal onClose={() => setShowImport(false)} onImportSuccess={() => { setShowImport(false); loadData(); }} />}
+      {showQuestionModal && <QuestionFormModal onClose={() => setShowQuestionModal(false)} onSuccess={loadQuestions} />}
+      {showSettingsModal && <SettingsModal onClose={() => setShowSettingsModal(false)} onSave={loadQuestions} />}
     </div>
   );
 }
