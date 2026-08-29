@@ -3,7 +3,6 @@
 :root {
   --bg-main: #0b0e14;
   --bg-card: #151924;
-  --bg-card-hover: #1c2232;
   --primary-red: #e63946;
   --primary-red-hover: #d90429;
   --accent-blue: #0077b6;
@@ -11,9 +10,6 @@
   --text-primary: #f8f9fa;
   --text-secondary: #94a3b8;
   --border-color: #262c40;
-  --border-radius-lg: 16px;
-  --border-radius-md: 10px;
-  --border-radius-sm: 6px;
   --font-cairo: 'Cairo', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -35,132 +31,45 @@ body {
   line-height: 1.6;
 }
 
-/* =========================================================
-   شريط الهيدر والتنقل العلوي الاحترافي (Navbar Header)
-   ========================================================= */
 .app-header {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
+  border-radius: 16px;
   padding: 16px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.brand-title-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand-title-group h1 {
-  font-size: 1.4rem;
-  font-weight: 900;
-  background: linear-gradient(45deg, #fff, var(--primary-red));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.brand-title-group span {
-  font-size: 0.8rem;
-  background: rgba(230, 57, 70, 0.15);
-  color: var(--primary-red);
-  padding: 2px 8px;
-  border-radius: 20px;
-  border: 1px solid rgba(230, 57, 70, 0.3);
-  font-weight: 700;
-}
-
-.header-actions {
-  display: flex;
-  gap: 10px;
-}
-
-/* =========================================================
-   الأزرار الاحترافية (Custom Buttons)
-   ========================================================= */
 .btn {
   border: none;
   padding: 10px 18px;
-  border-radius: var(--border-radius-md);
+  border-radius: 10px;
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: all 0.25s ease;
 }
 
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-}
+.btn-primary { background: var(--primary-red); color: #ffffff; }
+.btn-primary:hover { background: var(--primary-red-hover); }
+.btn-secondary { background: #202738; color: var(--text-primary); border: 1px solid var(--border-color); }
 
-.btn:active {
-  transform: translateY(0);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary-red), var(--primary-red-hover));
-  color: #ffffff;
-}
-
-.btn-secondary {
-  background: #202738;
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-}
-.btn-secondary:hover {
-  background: #2a334a;
-}
-
-.btn-accent {
-  background: linear-gradient(135deg, var(--accent-blue), #005f9e);
-  color: #fff;
-}
-
-.btn-gold {
-  background: linear-gradient(135deg, var(--accent-gold), #e0a100);
-  color: #000;
-}
-
-/* =========================================================
-   البطاقات والداشبورد الداخلي (Cards & Grid Layout)
-   ========================================================= */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
+  border-radius: 16px;
   padding: 20px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
-  transition: border-color 0.2s;
 }
 
-.card:hover {
-  border-color: rgba(230, 57, 70, 0.4);
-}
-
-.grid-dashboard {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-/* =========================================================
-   النوافذ المنبثقة والإنبوكس (Modern Modals)
-   ========================================================= */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(5, 7, 12, 0.85);
   backdrop-filter: blur(8px);
   display: flex;
@@ -173,102 +82,30 @@ body {
 .modal-content {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-lg);
+  border-radius: 16px;
   padding: 28px;
   width: 100%;
-  max-width: 580px;
   box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-  animation: modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes modalIn {
-  from { opacity: 0; transform: scale(0.94); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-.modal-content h3 {
-  font-size: 1.3rem;
-  font-weight: 800;
-  margin-bottom: 16px;
-  color: var(--text-primary);
-  border-bottom: 2px solid var(--primary-red);
-  padding-bottom: 8px;
-}
-
-/* =========================================================
-   حقول المدخلات والإدخال (Form Inputs)
-   ========================================================= */
-.form-group {
-  margin-bottom: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 700;
-  margin-bottom: 6px;
-  color: var(--text-secondary);
-}
-
-.form-group input, 
-.form-group select, 
-.form-group textarea {
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 0.9rem; font-weight: 700; margin-bottom: 6px; color: var(--text-secondary); }
+.form-group input, .form-group select, .form-group textarea {
   width: 100%;
   padding: 12px 14px;
   background: #0f121a;
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
+  border-radius: 10px;
   color: var(--text-primary);
   font-size: 0.95rem;
   outline: none;
-  transition: all 0.2s;
 }
 
-.form-group input:focus, 
-.form-group select:focus, 
-.form-group textarea:focus {
-  border-color: var(--primary-red);
-  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.2);
-}
-
-/* =========================================================
-   قائمة بنك الأسئلة والتصفية (Question Bank Items)
-   ========================================================= */
-.q-bank-item {
-  background: #11141f;
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  padding: 16px;
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: all 0.2s;
-}
-
-.q-bank-item:hover {
-  background: #181d2b;
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.badge {
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 800;
-}
-.badge-mcq { background: rgba(0, 119, 182, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
-.badge-essay { background: rgba(255, 183, 3, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
-
-/* =========================================================
-   ورقة الامتحان الاحترافية (تصدير وطباعة PDF / Word)
-   ========================================================= */
+/* ورقة الامتحان والطباعة */
 .exam-paper-container {
   background: #ffffff !important;
   color: #111111 !important;
   padding: 40px;
-  border-radius: 4px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
   max-width: 900px;
   margin: 0 auto;
 }
@@ -282,16 +119,6 @@ body {
   margin-bottom: 24px;
 }
 
-.section-header-title {
-  background-color: #f1f5f9;
-  color: #0f172a;
-  border-right: 5px solid var(--primary-red);
-  padding: 8px 14px;
-  font-size: 1.05rem;
-  font-weight: 800;
-  margin: 20px 0 16px 0;
-}
-
 .question-block {
   background: #fff;
   padding: 14px 0;
@@ -300,7 +127,6 @@ body {
 
 .q-head {
   display: flex;
-  align-items: flex-start;
   gap: 10px;
   font-size: 1.05rem;
   font-weight: 700;
@@ -308,26 +134,7 @@ body {
   margin-bottom: 10px;
 }
 
-.q-num {
-  color: var(--primary-red);
-  font-weight: 900;
-}
-
-.options-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  padding-right: 25px;
-}
-
-.option-item {
-  background: #f8fafc;
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
-  font-size: 0.95rem;
-  font-weight: 600;
-}
+.q-num { color: var(--primary-red); font-weight: 900; }
 
 .essay-line {
   border-bottom: 1px dashed #94a3b8;
@@ -338,5 +145,4 @@ body {
   .no-print { display: none !important; }
   body { background: #fff !important; padding: 0 !important; }
   .exam-paper-container { box-shadow: none !important; padding: 0 !important; }
-  .page-break { page-break-before: always; }
 }
