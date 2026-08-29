@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import html2canvas from 'html2canvas';
 
 export default function ExamPreview({ exam, questions, branding, onBack }) {
   const [includeOMR, setIncludeOMR] = useState(true);
@@ -20,18 +19,6 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
     document.body.removeChild(fileDownload);
   };
 
-  // تصدير كـ صور (PNG Image)
-  const exportToImages = async () => {
-    const element = document.getElementById("print-area");
-    const canvas = await html2canvas(element, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL('image/png');
-    
-    const link = document.createElement('a');
-    link.href = imgData;
-    link.download = `${exam?.title || 'امتحان'}.png`;
-    link.click();
-  };
-
   const mcqQuestions = (questions || []).filter(q => q.type === 'mcq');
   const essayQuestions = (questions || []).filter(q => q.type === 'essay');
 
@@ -40,9 +27,8 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
       {/* شريط التحكم والتصدير */}
       <div className="card no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <button className="btn btn-secondary" onClick={onBack}>⬅️ العودة</button>
-        <button className="btn btn-primary" onClick={() => window.print()}>📄 تصدير / طباعة PDF</button>
+        <button className="btn btn-primary" onClick={() => window.print()}>📄 طباعة / حفظ PDF أو صورة</button>
         <button className="btn btn-accent" onClick={exportToWord}>📝 تصدير ملف Word</button>
-        <button className="btn btn-secondary" onClick={exportToImages}>🖼️ تصدير كـ صورة</button>
 
         <div style={{ marginRight: 'auto', display: 'flex', gap: '12px' }}>
           <label><input type="checkbox" checked={includeOMR} onChange={e => setIncludeOMR(e.target.checked)} /> ورقة OMR</label>
@@ -96,10 +82,10 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
           </div>
         )}
 
-        {/* القسم الثاني: الأسئلة المقالية (تنسيق خاص بسطور الإجابة) */}
+        {/* القسم الثاني: الأسئلة المقالية */}
         {essayQuestions.length > 0 && (
           <div className="exam-section" style={{ marginTop: '24px' }}>
-            <h3 className="section-header-title">ثانياً: الأسئلة المقالية (أجب عن الأسئلة التالية موضحاً خطوات الحل)</h3>
+            <h3 className="section-header-title">ثانياً: الأسئلة المقالية</h3>
             {essayQuestions.map((q, idx) => (
               <div key={q.id || idx} className="question-block essay-block">
                 <div className="q-head">
@@ -110,7 +96,6 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
 
                 {q.image && <img src={q.image} alt="توضيح" className="q-img" />}
 
-                {/* مساحة الإجابة المخصصة للأسئلة المقالية (سطور مسطرة جاهزة للكتابة) */}
                 <div className="essay-answer-space">
                   <div className="essay-line"></div>
                   <div className="essay-line"></div>
@@ -122,7 +107,7 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
           </div>
         )}
 
-        {/* شيت الـ OMR لأسئلة اختر فقط */}
+        {/* شيت الـ OMR */}
         {includeOMR && mcqQuestions.length > 0 && (
           <div className="omr-section page-break" style={{ marginTop: '30px' }}>
             <h3 className="section-title">شيت إجابة البابل شيت (OMR)</h3>
@@ -139,7 +124,7 @@ export default function ExamPreview({ exam, questions, branding, onBack }) {
           </div>
         )}
 
-        {/* نموذج الإجابة للمدرس */}
+        {/* نموذج الإجابة */}
         {includeModelAnswer && (
           <div className="model-answer-section page-break" style={{ marginTop: '30px', borderTop: '2px solid #000', paddingTop: '15px' }}>
             <h3>🔑 نموذج الإجابة الرسمي</h3>
