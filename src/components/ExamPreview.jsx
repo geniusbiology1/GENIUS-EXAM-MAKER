@@ -1,12 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { dbOperations } from '../db/database';
+import html2pdf from 'html2pdf.js';
 
 export default function ExamPreview({ exam, questions, onBack }) {
   const [theme, setTheme] = useState('red');
+  const [teacherName, setTeacherName] = useState('أ/ علاء شيتة');
+  const [centerName, setCenterName] = useState('GENIUS BIOLOGY CENTER');
+  const [subjectName, setSubjectName] = useState('الأحياء للثانوية العامة');
+  const printRef = useRef(null);
 
   useEffect(() => {
     dbOperations.getSetting('theme', 'red').then(setTheme);
+    dbOperations.getSetting('teacherName', 'أ/ علاء شيتة').then(setTeacherName);
+    dbOperations.getSetting('centerName', 'GENIUS BIOLOGY CENTER').then(setCenterName);
+    dbOperations.getSetting('subjectName', 'الأحياء للثانوية العامة').then(setSubjectName);
   }, []);
+
+  const downloadPDF = () => {
+    const element = printRef.current;
+    const opt = {
+      margin: 10,
+      filename: `امتحان_${exam?.title || 'الأحياء'}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
+  };
 
   const getThemeStyles = () => {
     if (theme === 'navy') return { '--theme-primary': '#0077b6', '--theme-dark': '#0f172a', '--theme-bg': '#ffffff' };
@@ -18,17 +38,17 @@ export default function ExamPreview({ exam, questions, onBack }) {
     <div>
       <div className="card no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <button className="btn btn-secondary" onClick={onBack}>⬅️ العودة للبنك</button>
-        <button className="btn btn-primary" onClick={() => window.print()}>🖨️ طباعة الورقة A4 / PDF</button>
+        <button className="btn btn-primary" onClick={downloadPDF}>📥 تنزيل PDF جاهز للطباعة</button>
       </div>
 
-      <div className="a4-paper" style={getThemeStyles()}>
+      <div className="a4-paper" ref={printRef} style={getThemeStyles()}>
         <div className="exam-header-box">
           <div>
-            <h2 className="exam-header-title">GENIUS BIOLOGY CENTER</h2>
-            <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>الأحياء للثانوية العامة — أ/ علاء شيتة</div>
+            <h2 className="exam-header-title">{centerName}</h2>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{subjectName} — {teacherName}</div>
           </div>
           <div style={{ textAlign: 'left' }}>
-            <h3 style={{ fontSize: '1.1rem' }}>{exam?.title || 'اختبار الأحياء الشامل'}</h3>
+            <h3 style={{ fontSize: '1.1rem' }}>{exam?.title || 'اختبار الأحياء'}</h3>
             <div style={{ fontSize: '0.85rem' }}>⏱️ الزمن: 60 دقيقة</div>
           </div>
         </div>
@@ -42,7 +62,7 @@ export default function ExamPreview({ exam, questions, onBack }) {
 
             {q.image && (
               <div style={{ textAlign: 'center', margin: '10px 0' }}>
-                <img src={q.image} alt="diagram" style={{ maxHeight: '180px', objectFit: 'contain' }} />
+                <img src={q.image} alt="diagram" />
               </div>
             )}
 
