@@ -9,36 +9,49 @@ export default function SettingsModal({ onClose, onSave }) {
   const [selectedChapId, setSelectedChapId] = useState('');
   const [theme, setTheme] = useState('red');
 
+  // بيانات الترويسة
+  const [teacherName, setTeacherName] = useState('أ/ علاء شيتة');
+  const [centerName, setCenterName] = useState('GENIUS BIOLOGY CENTER');
+  const [subjectName, setSubjectName] = useState('الأحياء للثانوية العامة');
+
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     const ch = await dbOperations.getAll('chapters');
     const ls = await dbOperations.getAll('lessons');
     const th = await dbOperations.getSetting('theme', 'red');
+    const tName = await dbOperations.getSetting('teacherName', 'أ/ علاء شيتة');
+    const cName = await dbOperations.getSetting('centerName', 'GENIUS BIOLOGY CENTER');
+    const sName = await dbOperations.getSetting('subjectName', 'الأحياء للثانوية العامة');
+    
     setChapters(ch || []);
     setLessons(ls || []);
     setTheme(th);
+    setTeacherName(tName);
+    setCenterName(cName);
+    setSubjectName(sName);
     if (ch.length > 0) setSelectedChapId(ch[0].id);
   };
 
   const addChapter = async () => {
     if (!newChapter.trim()) return;
-    const item = { id: Date.now().toString(), name: newChapter };
-    await dbOperations.add('chapters', item);
+    await dbOperations.add('chapters', { id: Date.now().toString(), name: newChapter });
     setNewChapter('');
     loadData();
   };
 
   const addLesson = async () => {
     if (!newLesson.trim() || !selectedChapId) return;
-    const item = { id: Date.now().toString(), chapterId: selectedChapId, name: newLesson };
-    await dbOperations.add('lessons', item);
+    await dbOperations.add('lessons', { id: Date.now().toString(), chapterId: selectedChapId, name: newLesson });
     setNewLesson('');
     loadData();
   };
 
   const saveSettings = async () => {
     await dbOperations.setSetting('theme', theme);
+    await dbOperations.setSetting('teacherName', teacherName);
+    await dbOperations.setSetting('centerName', centerName);
+    await dbOperations.setSetting('subjectName', subjectName);
     onSave();
     onClose();
   };
@@ -46,51 +59,38 @@ export default function SettingsModal({ onClose, onSave }) {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h3>⚙️ إعدادات القواميس والهوية البصرية</h3>
+        <h3>⚙️ إعدادات الترويسة والباليتات</h3>
 
-        {/* اختيارات الهوية البصرية */}
-        <div className="form-group" style={{ marginTop: '14px' }}>
-          <label>🎨 اختر الباليت البصرية للطباعة (A4):</label>
+        {/* بيانات البراندينج */}
+        <div className="form-group" style={{ marginTop: '10px' }}>
+          <label>اسم السنتر / المركز:</label>
+          <input type="text" value={centerName} onChange={(e) => setCenterName(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>اسم المعلم:</label>
+          <input type="text" value={teacherName} onChange={(e) => setTeacherName(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>اسم المادة / الصف:</label>
+          <input type="text" value={subjectName} onChange={(e) => setSubjectName(e.target.value)} />
+        </div>
+
+        <div className="form-group">
+          <label>🎨 الباليت البصرية للطباعة (A4):</label>
           <select value={theme} onChange={(e) => setTheme(e.target.value)}>
             <option value="red">الملكي (أحمر + أسود + أبيض)</option>
             <option value="navy">الكحلي الحديث (كحلي + رمادي + أبيض)</option>
-            <option value="eco">الاقتصادي (أبيض وأسود فقط - موفر للحبر)</option>
+            <option value="eco">الاقتصادي (أبيض وأسود فقط)</option>
           </select>
         </div>
 
         <hr style={{ borderColor: 'var(--border-color)', margin: '15px 0' }} />
 
-        {/* إدارة الفصول */}
-        <h4>📚 قاموس الفصول</h4>
+        {/* إدارة الفصول والدروس */}
+        <h4>📚 قاموس الفصول والدروس</h4>
         <div style={{ display: 'flex', gap: '8px', margin: '8px 0' }}>
-          <input type="text" placeholder="اسم الفصل الجديد..." value={newChapter} onChange={(e) => setNewChapter(e.target.value)} />
+          <input type="text" placeholder="اسم الفصل..." value={newChapter} onChange={(e) => setNewChapter(e.target.value)} />
           <button className="btn btn-primary" onClick={addChapter}>+ إضافة</button>
-        </div>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '15px' }}>
-          {chapters.map(c => (
-            <span key={c.id} style={{ background: '#1c2333', padding: '4px 10px', borderRadius: '6px', fontSize: '0.85rem' }}>
-              {c.name}
-            </span>
-          ))}
-        </div>
-
-        {/* إدارة الدروس */}
-        <h4>📖 قاموس الدروس</h4>
-        <div className="form-group" style={{ marginTop: '6px' }}>
-          <select value={selectedChapId} onChange={(e) => setSelectedChapId(e.target.value)}>
-            {chapters.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
-        <div style={{ display: 'flex', gap: '8px', margin: '8px 0' }}>
-          <input type="text" placeholder="اسم الدرس الجديد..." value={newLesson} onChange={(e) => setNewLesson(e.target.value)} />
-          <button className="btn btn-primary" onClick={addLesson}>+ إضافة</button>
-        </div>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          {lessons.filter(l => l.chapterId === selectedChapId).map(l => (
-            <span key={l.id} style={{ background: '#1c2333', padding: '4px 10px', borderRadius: '6px', fontSize: '0.85rem' }}>
-              {l.name}
-            </span>
-          ))}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
