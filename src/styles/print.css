@@ -1,0 +1,12 @@
+@media print {
+  body * { visibility: hidden; }
+  #print-area, #print-area * { visibility: visible; }
+  #print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 10mm; direction: rtl; font-family: 'Cairo', sans-serif; color: #000; background: #fff; }
+  .no-print { display: none !important; }
+}
+
+.exam-paper { direction: rtl; background: #fff; color: #000; padding: 15mm; }
+.branding-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 20px; }
+.omr-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.omr-table th, .omr-table td { border: 1px solid #000; text-align: center; padding: 6px; font-size: 0.85rem; }
+.bubble { display: inline-block; width: 18px; height: 18px; border: 1.5px solid #000; border-radius: 50%; margin: 0 3px; }
