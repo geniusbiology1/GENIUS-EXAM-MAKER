@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dbOperations } from '../db/database';
+import ImageCropperModal from './ImageCropperModal'; // 👈 1. استدعاء أداة القص والمسح
 
 export default function QuestionEditor({ editingQuestion, onSaveSuccess, onCancel }) {
   const [type, setType] = useState('mcq');
@@ -10,6 +11,10 @@ export default function QuestionEditor({ editingQuestion, onSaveSuccess, onCance
   const [options, setOptions] = useState(['', '', '', '']);
   const [correctAnswer, setCorrectAnswer] = useState(0);
   const [marks, setMarks] = useState(1);
+  
+  // 👈 2. حالة جديدة للتحكم في ظهور أداة القص
+  const [showCropper, setShowCropper] = useState(false);
+  const [tempImageForCropper, setTempImageForCropper] = useState(null);
 
   useEffect(() => {
     if (editingQuestion) {
@@ -28,7 +33,11 @@ export default function QuestionEditor({ editingQuestion, onSaveSuccess, onCance
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result);
+      reader.onloadend = () => {
+        // بدلاً من حفظ الصورة مباشرة، نفتحها في أداة التعديل
+        setTempImageForCropper(reader.result);
+        setShowCropper(true);
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -80,10 +89,36 @@ export default function QuestionEditor({ editingQuestion, onSaveSuccess, onCance
           </div>
           <textarea rows="3" value={text} onChange={(e) => setText(e.target.value)} required />
         </div>
+        
+        {/* 👈 3. تعديل واجهة رفع الصورة */}
         <div className="form-group">
           <label>صورة السؤال:</label>
           <input type="file" accept="image/*" onChange={handleImageChange} />
+          
+          {image && (
+            <div style={{ marginTop: '10px', textAlign: 'center' }}>
+              <img src={image} alt="Preview" style={{ maxHeight: '140px', borderRadius: '6px', border: '1px solid #444' }} />
+              <br />
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                style={{ fontSize: '0.8rem', marginTop: '6px' }}
+                onClick={() => { setTempImageForCropper(image); setShowCropper(true); }}
+              >
+                ✏️ مسح البيانات أو تعديل الصورة
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                style={{ fontSize: '0.8rem', marginTop: '6px', marginRight: '5px' }}
+                onClick={() => setImage('')}
+              >
+                ❌ حذف الصورة
+              </button>
+            </div>
+          )}
         </div>
+
         {type === 'mcq' && (
           <div className="form-group">
             <label>الخيارات:</label>
@@ -102,6 +137,18 @@ export default function QuestionEditor({ editingQuestion, onSaveSuccess, onCance
           <button type="button" className="btn btn-secondary" onClick={onCancel}>إلغاء</button>
         </div>
       </form>
+
+      {/* 👈 4. إظهار نافذة أداة القص عند الحاجة */}
+      {showCropper && tempImageForCropper && (
+        <ImageCropperModal 
+          imageSrc={tempImageForCropper}
+          onSave={(croppedImg) => {
+            setImage(croppedImg);
+            setShowCropper(false);
+          }}
+          onClose={() => setShowCropper(false)}
+        />
+      )}
     </div>
   );
 }
