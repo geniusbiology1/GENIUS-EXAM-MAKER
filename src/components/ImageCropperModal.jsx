@@ -4,13 +4,10 @@ export default function ImageCropperModal({ imageSrc, onSave, onClose }) {
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [brushSize, setBrushSize] = useState(25);
-  const [mode, setMode] = useState('erase'); // 'erase' أو 'crop'
-  
-  // نقاط تحديد القص
-  const [cropRect, setCropRect] = useState({ x: 10, y: 10, width: 80, height: 80 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -19,19 +16,16 @@ export default function ImageCropperModal({ imageSrc, onSave, onClose }) {
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-      setCropRect({ x: 0, y: 0, width: img.width, height: img.height });
     };
   }, [imageSrc]);
 
-  // المسح بالفرشاة البيضاء
   const handlePointerDown = (e) => {
-    if (mode !== 'erase') return;
     setIsDrawing(true);
     eraseAt(e);
   };
 
   const handlePointerMove = (e) => {
-    if (!isDrawing || mode !== 'erase') return;
+    if (!isDrawing) return;
     eraseAt(e);
   };
 
@@ -39,87 +33,55 @@ export default function ImageCropperModal({ imageSrc, onSave, onClose }) {
 
   const eraseAt = (e) => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
     
-    // تحويل إحداثيات الشاشة لإحداثيات الكانفاس الحقيقية
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     
     const x = (clientX - rect.left) * (canvas.width / rect.width);
     const y = (clientY - rect.top) * (canvas.height / rect.height);
 
-    ctx.fillStyle = '#FFFFFF'; // لون المسح الأبيض
+    ctx.fillStyle = '#FFFFFF';
     ctx.beginPath();
     ctx.arc(x, y, brushSize, 0, Math.PI * 2);
     ctx.fill();
   };
 
-  // إتمام حفظ الصورة وتطبيق التعديل/القص
   const handleApply = () => {
     const canvas = canvasRef.current;
-    
-    if (mode === 'crop') {
-      // إقتطاع الجزء المحدد فقط
-      const tempCanvas = document.createElement('canvas');
-      const tempCtx = tempCanvas.getContext('2d');
-      tempCanvas.width = cropRect.width;
-      tempCanvas.height = cropRect.height;
-
-      tempCtx.drawImage(
-        canvas,
-        cropRect.x, cropRect.y, cropRect.width, cropRect.height,
-        0, 0, cropRect.width, cropRect.height
-      );
-
-      onSave(tempCanvas.toDataURL('image/png'));
-    } else {
-      // حفظ المسح المباشر
+    if (canvas) {
       onSave(canvas.toDataURL('image/png'));
     }
     onClose();
   };
 
   return (
-    <div className="modal-overlay" style={{ zIndex: 1100 }}>
-      <div className="modal-content" style={{ maxWidth: '600px', width: '95%', padding: '15px' }}>
-        <h3 style={{ textAlign: 'center', marginBottom: '10px' }}>🎨 محرر وتعديل رسمة السؤال</h3>
+    <div className="modal-overlay" style={{ zIndex: 2000 }}>
+      <div className="modal-content" style={{ maxWidth: '650px', width: '95%', padding: '15px' }}>
+        <h3 style={{ textAlign: 'center', marginBottom: '10px' }}>🎨 محرر الرسمة (مسح وتعديل)</h3>
 
-        {/* شريط أدوات التعديل */}
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginBottom: '10px', flexWrap: 'wrap' }}>
-          <button 
-            type="button"
-            className={`btn ${mode === 'erase' ? 'btn-primary' : 'btn-secondary'}`} 
-            onClick={() => setMode('erase')}
-          >
-            🧹 فرشة المسح
-          </button>
-          
-          {mode === 'erase' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <span style={{ fontSize: '0.8rem' }}>حجم الفرشاة:</span>
-              <input 
-                type="range" 
-                min="10" 
-                max="60" 
-                value={brushSize} 
-                onChange={(e) => setBrushSize(Number(e.target.value))} 
-              />
-            </div>
-          )}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '10px' }}>
+          <span style={{ fontSize: '0.85rem' }}>🧹 حجم ممحاة المسح:</span>
+          <input 
+            type="range" 
+            min="5" 
+            max="60" 
+            value={brushSize} 
+            onChange={(e) => setBrushSize(Number(e.target.value))} 
+          />
         </div>
 
-        {/* منطقة عرض الرسمة للتعديل */}
         <div 
           style={{ 
-            position: 'relative', 
-            maxHeight: '55vh', 
+            maxHeight: '50vh', 
             overflow: 'auto', 
-            background: '#222', 
+            background: '#1a1a1a', 
             borderRadius: '8px',
             textAlign: 'center',
             padding: '5px',
-            touchAction: 'none' // منع السكرول أثناء المسح على الموبايل
+            touchAction: 'none'
           }}
         >
           <canvas 
@@ -130,17 +92,17 @@ export default function ImageCropperModal({ imageSrc, onSave, onClose }) {
             onTouchStart={handlePointerDown}
             onTouchMove={handlePointerMove}
             onTouchEnd={handlePointerUp}
-            style={{ maxWidth: '100%', height: 'auto', cursor: mode === 'erase' ? 'crosshair' : 'default' }}
+            style={{ maxWidth: '100%', height: 'auto', cursor: 'crosshair' }}
           />
         </div>
 
         <p style={{ fontSize: '0.8rem', color: '#aaa', textAlign: 'center', marginTop: '8px' }}>
-          💡 اسحب بصُباعك أو بالماوس فوق أي جزء غير مرغوب فيه لمسحه باللون الأبيض.
+          💡 اسحب الماوس أو إصبعك على أي كتابة أو جزء تريد إزالته باللون الأبيض.
         </p>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '15px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
           <button type="button" className="btn btn-secondary" onClick={onClose}>إلغاء</button>
-          <button type="button" className="btn btn-primary" onClick={handleApply}>✅ تطبيق واعتماد الصورة</button>
+          <button type="button" className="btn btn-primary" onClick={handleApply}>✅ حفظ الصورة المعدلة</button>
         </div>
       </div>
     </div>
