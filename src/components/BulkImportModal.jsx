@@ -18,7 +18,6 @@ export default function BulkImportModal({ onClose, onSuccess }) {
 
     const parsed = blocks.map((block, index) => {
       const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
-      const firstLine = lines[0] || '';
 
       // استخراج الخيارات الممكنة (أ/ب/ج/د أو 1/2/3/4)
       const optionLines = lines.filter(l => /^[أ-دA-D1-4][\.\-\)]/.test(l));
@@ -27,7 +26,7 @@ export default function BulkImportModal({ onClose, onSuccess }) {
 
       let options = [];
       if (isMcq) {
-        options = optionLines.map(l => l.replace(/^[أ-d1-4][\.\-\)]\s*/, ''));
+        options = optionLines.map(l => l.replace(/^[أ-دA-D1-4][\.\-\)]\s*/, ''));
       }
 
       // تنظيف نص السؤال من الأرقام في البداية
@@ -103,7 +102,7 @@ export default function BulkImportModal({ onClose, onSuccess }) {
         </div>
 
         <div className="form-group">
-          <label>الصق النص المجمع هنا (سيتم تفكيك الـ 20 سؤالاً تلقائياً وتحديد نوع المقالي/MCQ):</label>
+          <label>الصق النص المجمع هنا (سيتم تفكيك الأسئلة تلقائياً وتحديد نوع المقالي/MCQ):</label>
           <textarea 
             rows="10" 
             value={rawText} 
