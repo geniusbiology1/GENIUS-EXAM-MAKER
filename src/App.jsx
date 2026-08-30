@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { dbOperations } from './db/database';
-import QuestionFormModal from './components/QuestionFormModal';
+import QuestionModal from './components/QuestionModal'; // 👈 تغيير الاستدعاء للجديد
+import BulkImportModal from './components/BulkImportModal'; // 👈 إضافة ميزة الإدخال المتعدد
 import SettingsModal from './components/SettingsModal';
 import ExamPreview from './components/ExamPreview';
 import './styles/global.css';
@@ -10,6 +11,7 @@ export default function App() {
   const [questions, setQuestions] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [showBulkModal, setShowBulkModal] = useState(false); // مودال الإدخال المتعدد
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   useEffect(() => { loadQuestions(); }, []);
@@ -28,6 +30,7 @@ export default function App() {
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button className="btn btn-secondary" onClick={() => setShowSettingsModal(true)}>⚙️ القواميس والباليتات</button>
+          <button className="btn btn-secondary" onClick={() => setShowBulkModal(true)}>⚡ إدخال متعدد</button>
           <button className="btn btn-secondary" onClick={() => setShowQuestionModal(true)}>➕ سؤال جديد</button>
           <button className="btn btn-primary" disabled={selectedIds.length === 0} onClick={() => setView('preview')}>
             🚀 معاينة A4 ({selectedIds.length})
@@ -69,8 +72,27 @@ export default function App() {
         />
       )}
 
-      {showQuestionModal && <QuestionFormModal onClose={() => setShowQuestionModal(false)} onSuccess={loadQuestions} />}
-      {showSettingsModal && <SettingsModal onClose={() => setShowSettingsModal(false)} onSave={loadQuestions} />}
+      {/* المودالات المحدثة */}
+      {showQuestionModal && (
+        <QuestionModal 
+          onClose={() => setShowQuestionModal(false)} 
+          onSave={() => { loadQuestions(); setShowQuestionModal(false); }} 
+        />
+      )}
+      
+      {showBulkModal && (
+        <BulkImportModal 
+          onClose={() => setShowBulkModal(false)} 
+          onSuccess={loadQuestions} 
+        />
+      )}
+
+      {showSettingsModal && (
+        <SettingsModal 
+          onClose={() => setShowSettingsModal(false)} 
+          onSave={loadQuestions} 
+        />
+      )}
     </div>
   );
 }
