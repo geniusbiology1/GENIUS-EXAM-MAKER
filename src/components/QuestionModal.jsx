@@ -123,7 +123,7 @@ export default function QuestionModal({ questionToEdit, onClose, onSave }) {
             <textarea rows="3" value={text} onChange={(e) => setText(e.target.value)} required />
           </div>
 
-          {/* قسم الصورة والمفسح */}
+          {/* قسم الصورة والمسح */}
           <div className="form-group">
             <label>صورة السؤال (اختياري):</label>
             <input type="file" accept="image/*" onChange={handleImageUpload} />
