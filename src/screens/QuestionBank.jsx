@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { dbOperations } from '../db/database';
-import FileImportModal from '../components/FileImportModal';
+import BulkImportModal from '../components/BulkImportModal'; // 👈 1. تعديل الاستدعاء هنا
 
 export default function QuestionBank({ onAddNewQuestion, onEditQuestion, onBuildExam, onOpenQuickGen }) {
   const [questions, setQuestions] = useState([]);
@@ -68,10 +68,11 @@ export default function QuestionBank({ onAddNewQuestion, onEditQuestion, onBuild
         ))}
       </div>
 
+      {/* 👈 2. تعديل اسم المكون المفتوح هنا */}
       {showImportModal && (
-        <FileImportModal 
+        <BulkImportModal 
           onClose={() => setShowImportModal(false)}
-          onImportSuccess={() => {
+          onSuccess={() => {
             setShowImportModal(false);
             loadQuestions();
           }}
