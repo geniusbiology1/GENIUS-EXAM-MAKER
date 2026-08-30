@@ -19,10 +19,10 @@ export default function ExamPreview({ exam, questions, onBack }) {
   const downloadPDF = () => {
     const element = printRef.current;
     const opt = {
-      margin: 10,
-      filename: `امتحان_${exam?.title || 'الأحياء'}.pdf`,
+      margin: 8,
+      filename: `امتحان_العبقري_${Date.now()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
+      html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(element).save();
@@ -61,12 +61,12 @@ export default function ExamPreview({ exam, questions, onBack }) {
             </div>
 
             {q.image && (
-              <div style={{ textAlign: 'center', margin: '10px 0' }}>
+              <div style={{ textAlign: 'center', margin: '8px 0' }}>
                 <img src={q.image} alt="diagram" />
               </div>
             )}
 
-            {q.type === 'mcq' && q.options && (
+            {q.type === 'mcq' && q.options && q.options.length > 0 && (
               <div className="options-grid">
                 <div>(أ) {q.options[0]}</div>
                 <div>(ب) {q.options[1]}</div>
